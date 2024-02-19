@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useEffect, useState } from 'react'
-import { differenceInSeconds } from 'date-fns'
+import { differenceInSeconds, interval } from 'date-fns'
 
 const newCycleFormValidationSchema = z.object({
   task: z.string().min(1, 'Informe a tarefa'),
@@ -35,12 +35,17 @@ export function Home() {
     }
   })
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
-  
+  let interval: number
+
   useEffect(() => {
     if (activeCycle) {
-      setInterval(() => {
+      interval = setInterval(() => {
         setAmountSecondsPassed(differenceInSeconds(new Date(), activeCycle.startDate))
       }, 1000) 
+    }
+
+    return () => {
+      clearInterval(interval)
     }
   }, [activeCycle])
 
@@ -56,6 +61,8 @@ export function Home() {
 
     setCycles(state => [...state, newCycle])
     setActiveCycleId(id)
+    setAmountSecondsPassed(0)
+
     reset()
   }
   
@@ -67,6 +74,12 @@ export function Home() {
 
   const minutes = String(minutesAmount).padStart(2, '0')
   const seconds = String(secondsAmount).padStart(2, '0')
+
+  useEffect(() => {
+    if (activeCycle) {
+      document.title = `${minutes}:${seconds}`
+    }
+  }, [minutes, seconds, activeCycle])
 
   // check submit
   const task = watch('task')
